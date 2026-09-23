@@ -68,6 +68,47 @@ export default function App() {
     setHistory([]);
   }
 
+  function restart() {
+  setRemaining(allCats);
+  setLiked([]);
+  setHistory([]);
+}
+
+function exportPreferences() {
+  if (liked.length === 0) return;
+
+  const header = ["cat_id", "tags", "image_url"];
+
+  const rows = liked.map((cat) => [
+    cat.id,
+    (cat.tags ?? []).join("|"),
+    cat.imageUrl,
+  ]);
+
+  const csvContent = [
+    header.join(","),
+    ...rows.map((row) =>
+      row.map((value) => `"${String(value).replace(/"/g, '""')}"`).join(",")
+    ),
+  ].join("\n");
+
+  const blob = new Blob([csvContent], {
+    type: "text/csv;charset=utf-8;",
+  });
+
+  const url = URL.createObjectURL(blob);
+
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "paws-preferences.csv";
+
+  document.body.appendChild(link);
+  link.click();
+
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
   const currentIndex = allCats.length - remaining.length + 1;
   const total = Math.max(allCats.length, 1);
   const progressPct = (currentIndex / total) * 100;
@@ -152,9 +193,19 @@ export default function App() {
                 </p>
               )}
 
-              <button className="restart" onClick={restart}>
-                Restart
-              </button>
+             <div className="summaryActions">
+  <button className="restart" onClick={restart}>
+    Restart
+  </button>
+
+  <button
+    className="exportBtn"
+    onClick={exportPreferences}
+    disabled={liked.length === 0}
+  >
+    Export Likes (.csv)
+  </button>
+</div>
 
               <div className="grid">
                 {liked.map((c) => (

@@ -226,3 +226,30 @@ img { width: 100%; height: 100%; object-fit: cover; user-select: none; -webkit-u
   opacity: .65;
   text-align: center;
 }
+
+
+.summaryActions {
+  display: flex;
+  gap: 10px;
+  margin: 10px 0 18px;
+  flex-wrap: wrap;
+}
+
+.exportBtn {
+  padding: 10px 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.10);
+  color: white;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.exportBtn:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.exportBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
