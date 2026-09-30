@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import "./styles.css";
 import type { Cat } from "./types";
 import { loadCats } from "./services/cataas";
@@ -36,43 +36,31 @@ export default function App() {
     return [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5);
   }, [liked]);
 
-  function onDecision(cat: Cat, decision: Decision) {
+  const onDecision = useCallback((cat: Cat, decision: Decision) => {
     setRemaining((prev) => prev.slice(1));
     setHistory((prev) => [{ cat, decision }, ...prev]);
 
     if (decision === "like") {
       setLiked((prev) => [cat, ...prev]);
     }
-  }
+  }, []);
 
-  function undo() {
-    setHistory((prev) => {
-      const last = prev[0];
-      if (!last) return prev;
+  const undo = useCallback(() => {
+    const last = history[0];
+    if (!last) return;
 
-      
-      setRemaining((r) => [last.cat, ...r]);
-
-      
-      if (last.decision === "like") {
-        setLiked((l) => l.filter((c) => c.id !== last.cat.id));
-      }
-
-      return prev.slice(1);
-    });
-  }
+    setRemaining((r) => [last.cat, ...r]);
+    if (last.decision === "like") {
+      setLiked((l) => l.filter((c) => c.id !== last.cat.id));
+    }
+    setHistory((prev) => prev.slice(1));
+  }, [history]);
 
   function restart() {
     setRemaining(allCats);
     setLiked([]);
     setHistory([]);
   }
-
-  function restart() {
-  setRemaining(allCats);
-  setLiked([]);
-  setHistory([]);
-}
 
 function exportPreferences() {
   if (liked.length === 0) return;
@@ -117,6 +105,11 @@ function exportPreferences() {
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
       if (loading) return;
+      if (e.key === "Backspace" || e.key.toLowerCase() === "u") {
+        e.preventDefault();
+        undo();
+        return;
+      }
       if (done) return;
 
       const top = remaining[0];
@@ -124,12 +117,11 @@ function exportPreferences() {
 
       if (e.key === "ArrowRight") onDecision(top, "like");
       else if (e.key === "ArrowLeft") onDecision(top, "dislike");
-      else if (e.key === "Backspace" || e.key.toLowerCase() === "u") undo();
     }
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [remaining, loading, done]);
+  }, [remaining, loading, done, onDecision, undo]);
 
   return (
     <div className="page">
@@ -194,6 +186,14 @@ function exportPreferences() {
               )}
 
              <div className="summaryActions">
+  <button
+    className="undoBtn"
+    onClick={undo}
+    disabled={history.length === 0}
+    title="Undo (Backspace / U)"
+  >
+    Undo last swipe
+  </button>
   <button className="restart" onClick={restart}>
     Restart
   </button>
